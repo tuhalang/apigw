@@ -1,42 +1,59 @@
 package com.tuhalang.apigw.dao.impl;
 
-import com.tuhalang.apigw.dao.AccountDao;
-import com.tuhalang.apigw.domain.Account;
+import com.tuhalang.apigw.dao.AgUserDao;
+import com.tuhalang.apigw.domain.AgUser;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.OneToMany;
 import javax.transaction.Transactional;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.util.List;
+import java.util.concurrent.Callable;
 
-@Repository("account_dao")
+@Repository
 @Transactional(rollbackOn = Exception.class)
-public class AccountDaoImpl implements AccountDao {
+public class AgUserDaoImpl implements AgUserDao {
 
     @Autowired
-    @Qualifier("apigw_session")
     private SessionFactory sessionFactory;
 
     @Override
-    public void save(Account account) throws Exception{
+    public Boolean saveDefaultUser(String username, String password, String salt, String email) throws Exception{
         Session session = sessionFactory.getCurrentSession();
-        session.save(account);
+        return session.doReturningWork(connection -> {
+            CallableStatement call = connection.prepareCall(
+                    "select create_new_user(?, ?, ?, ?)"
+            );
+            call.setString(1, username);
+            call.setString(2, password);
+            call.setString(3, salt);
+            call.setString(4, email);
+            return call.execute();
+        });
     }
 
     @Override
-    public Account findByUsername(String username) throws Exception{
+    public void save(AgUser agUser) throws Exception{
+        Session session = sessionFactory.getCurrentSession();
+        session.save(agUser);
+    }
+
+    @Override
+    public AgUser findByUsername(String username) throws Exception{
         StringBuilder sql = new StringBuilder(
-                "SELECT a FROM Account a WHERE a.username=:username"
+                "SELECT a FROM AgUser a WHERE a.username=:username"
         );
         Session session = sessionFactory.getCurrentSession();
-        Query query = session.createQuery(sql.toString(), Account.class);
+        Query query = session.createQuery(sql.toString(), AgUser.class);
         query.setParameter("username", username);
-        List<Account> accounts = query.list();
-        if(accounts.size()>0){
-            return accounts.get(0);
+        List<AgUser> agUsers = query.list();
+        if(agUsers.size()>0){
+            return agUsers.get(0);
         }
         return null;
     }
@@ -56,5 +73,4 @@ public class AccountDaoImpl implements AccountDao {
         }
         return Boolean.FALSE;
     }
-
 }

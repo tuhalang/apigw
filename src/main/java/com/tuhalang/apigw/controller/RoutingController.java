@@ -6,7 +6,7 @@ import com.tuhalang.apigw.common.CallAPI;
 import com.tuhalang.apigw.common.JwtUtils;
 import com.tuhalang.apigw.domain.ApiPermission;
 import com.tuhalang.apigw.domain.ApiResource;
-import com.tuhalang.apigw.service.AccountService;
+import com.tuhalang.apigw.service.AgUserService;
 import com.tuhalang.apigw.service.ApiPermissionService;
 import com.tuhalang.apigw.service.ApiResourceService;
 import com.tuhalang.apigw.utils.Convertor;
@@ -32,7 +32,7 @@ public class RoutingController extends CommonController{
     private ApiResourceService apiResourceService;
 
     @Autowired
-    private AccountService accountService;
+    private AgUserService agUserService;
 
     @Autowired
     private ApiPermissionService apiPermissionService;

@@ -26,4 +26,14 @@ public class Convertor {
         }
         return null;
     }
+
+    public static  <T> T jsonToObject(String json, Class<T> t){
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(json, t);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -14,7 +14,7 @@ public class AES {
 
     private static final String secretKey = "7dbc9134-6b2b-11ea-bc40-0c84dc1ef5b9";
     private static final String salt = "491374c0-6b2b-11ea-bc40-0c84dc1ef5b9";
-    private static final byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    private static final byte[] iv = {1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0};
 
     public static String encrypt(String strToEncrypt) {
         try {

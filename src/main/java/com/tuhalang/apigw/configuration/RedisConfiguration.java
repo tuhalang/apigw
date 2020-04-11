@@ -3,6 +3,7 @@ package com.tuhalang.apigw.configuration;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 
@@ -34,4 +35,6 @@ public class RedisConfiguration {
         return jedisSentinelPool;
 
     }
+
+
 }

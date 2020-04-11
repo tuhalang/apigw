@@ -5,4 +5,5 @@ import com.tuhalang.apigw.domain.Account;
 public interface AccountDao {
     void save(Account account) throws Exception;
     Account findByUsername(String username) throws Exception;
+    Boolean isExistEmailOrUsername(String email, String username) throws Exception;
 }
