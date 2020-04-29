@@ -8,4 +8,6 @@ public interface AgUserDao {
     AgUser findByUsername(String username) throws Exception;
     Boolean isExistEmailOrUsername(String email, String username) throws Exception;
     Boolean saveDefaultUser(String username, String password, String salt, String email) throws Exception;
+
+    void update(AgUser agUser) throws Exception;
 }

@@ -27,7 +27,7 @@ public class AgThrottling implements Serializable {
     private Long numOfRequest;
 
     @Column(name = "TIME_SECOND", nullable = false)
-    private Long timeSecond;
+    private Integer timeSecond;
 
     @Column(name = "CREATED_DATE", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -78,11 +78,11 @@ public class AgThrottling implements Serializable {
         this.numOfRequest = numOfRequest;
     }
 
-    public Long getTimeSecond() {
+    public Integer getTimeSecond() {
         return timeSecond;
     }
 
-    public void setTimeSecond(Long timeSecond) {
+    public void setTimeSecond(Integer timeSecond) {
         this.timeSecond = timeSecond;
     }
 

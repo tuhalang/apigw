@@ -6,6 +6,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -30,8 +31,13 @@ public class AgApi implements Serializable {
     @JoinColumn(name = "AG_APP_ID")
     private AgApp agApp;
 
-    @Column(name = "ENDPOINT", nullable = false, length = 1000)
-    private String endpoint;
+    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "AG_API_ENDPOINT",
+            joinColumns = {@JoinColumn(name = "AG_API_ID")},
+            inverseJoinColumns = {@JoinColumn(name = "AG_ENDPOINT_ID")}
+    )
+    private List<AgEndpoint> endpoints;
 
     @Column(name = "RESOURCE", nullable = false, length = 500)
     private String resource;
@@ -112,14 +118,6 @@ public class AgApi implements Serializable {
 
     public void setAgApp(AgApp agApp) {
         this.agApp = agApp;
-    }
-
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
     }
 
     public String getResource() {
@@ -224,5 +222,13 @@ public class AgApi implements Serializable {
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public List<AgEndpoint> getEndpoints() {
+        return endpoints;
+    }
+
+    public void setEndpoints(List<AgEndpoint> endpoints) {
+        this.endpoints = endpoints;
     }
 }

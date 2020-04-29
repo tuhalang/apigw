@@ -1,5 +1,8 @@
 package com.tuhalang.apigw.utils;
 
+import com.tuhalang.apigw.bean.EmailTransfer;
+import com.tuhalang.apigw.service.KafkaService;
+
 import java.util.Random;
 
 public class SendOTP {
@@ -13,11 +16,17 @@ public class SendOTP {
         return String.valueOf(otp);
     }
 
-    public static String sendOTPViaEmail(String email){
+    public static String sendOTPViaEmail(String email, KafkaService kafkaService){
         String otp = generateOTP();
         String subject = "OTP CODE";
         String content = "YOUR OTP CODE IS " + otp;
-        SendEmail.send(email,content,subject);
+
+        EmailTransfer emailTransfer = new EmailTransfer();
+        emailTransfer.setSubject(subject);
+        emailTransfer.setContent(content);
+        emailTransfer.setEmail(email);
+
+        kafkaService.transferMail(emailTransfer);
         return otp;
     }
 }

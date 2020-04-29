@@ -38,6 +38,12 @@ public class AgUserDaoImpl implements AgUserDao {
     }
 
     @Override
+    public void update(AgUser agUser) throws Exception {
+        Session session = sessionFactory.getCurrentSession();
+        session.update(agUser);
+    }
+
+    @Override
     public void save(AgUser agUser) throws Exception{
         Session session = sessionFactory.getCurrentSession();
         session.save(agUser);
@@ -45,11 +51,9 @@ public class AgUserDaoImpl implements AgUserDao {
 
     @Override
     public AgUser findByUsername(String username) throws Exception{
-        StringBuilder sql = new StringBuilder(
-                "SELECT a FROM AgUser a WHERE a.username=:username"
-        );
+        String sql = "SELECT a FROM AgUser a INNER JOIN FETCH a.agRoleApis WHERE a.username=:username";
         Session session = sessionFactory.getCurrentSession();
-        Query query = session.createQuery(sql.toString(), AgUser.class);
+        Query query = session.createQuery(sql, AgUser.class);
         query.setParameter("username", username);
         List<AgUser> agUsers = query.list();
         if(agUsers.size()>0){

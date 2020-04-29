@@ -22,7 +22,7 @@ public class SendEmail extends MyRunnable {
     private static final Logger LOGGER = Logger.getLogger(SendEmail.class);
     private static final Long TIMEOUT = 60000L;
 
-    private static final String USERNAME = "tuhalang007@gmail.com";
+    private static final String USERNAME = "";
     private static final String PASSWORD = "";
 
     private String emailTo;

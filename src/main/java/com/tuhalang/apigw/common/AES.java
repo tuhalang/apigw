@@ -51,7 +51,6 @@ public class AES {
     }
 
     public static void main(String[] args) {
-        System.out.println(encrypt("This is first message"));
-        System.out.println(decrypt("reUkYUgSIzfnTuQ+mZBB5RGNpA/FgfVp0slQKcQxjAk="));
+        System.out.println(encrypt("postgres"));
     }
 }

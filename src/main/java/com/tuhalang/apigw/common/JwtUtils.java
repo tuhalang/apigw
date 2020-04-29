@@ -50,10 +50,14 @@ public class JwtUtils {
 
     public static Claims decodeJWT(String jwt, String secretKey) {
         //This line will throw an exception if it is not a signed JWS (as expected)
-        Claims claims = Jwts.parser()
-                .setSigningKey(DatatypeConverter.parseBase64Binary(secretKey))
-                .parseClaimsJws(jwt).getBody();
-        return claims;
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(DatatypeConverter.parseBase64Binary(secretKey))
+                    .parseClaimsJws(jwt).getBody();
+            return claims;
+        }catch (Exception e){
+            return null;
+        }
     }
 
 
