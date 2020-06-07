@@ -13,4 +13,6 @@ public interface AgUserService {
     AgUser findByUsername(String username) throws Exception;
 
     void update(AgUser agUser) throws Exception;
+
+    void registerService(AgUser agUser, String serviceCode, String roleName, ResponseBean result) throws Exception;
 }

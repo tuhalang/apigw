@@ -4,10 +4,8 @@ import com.tuhalang.apigw.bean.ResponseBean;
 import com.tuhalang.apigw.bean.UserBean;
 import com.tuhalang.apigw.common.JwtUtils;
 import com.tuhalang.apigw.dao.AgUserDao;
-import com.tuhalang.apigw.domain.AgUser;
-import com.tuhalang.apigw.service.AgUserService;
-import com.tuhalang.apigw.service.JedisService;
-import com.tuhalang.apigw.service.KafkaService;
+import com.tuhalang.apigw.domain.*;
+import com.tuhalang.apigw.service.*;
 import com.tuhalang.apigw.utils.*;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +29,18 @@ public class AgUserServiceImpl implements AgUserService {
 
     @Autowired
     private KafkaService kafkaService;
+
+    @Autowired
+    private AgRoleService agRoleService;
+
+    @Autowired
+    private AgAppService agAppService;
+
+    @Autowired
+    private AgServiceService agServiceService;
+
+    @Autowired
+    private AgRoleApiService agRoleApiService;
 
     @Override
     public void register(UserBean userBean, String ipAddr, ResponseBean result) throws Exception {
@@ -339,5 +349,42 @@ public class AgUserServiceImpl implements AgUserService {
     @Override
     public void update(AgUser agUser) throws Exception {
         agUserDao.update(agUser);
+    }
+
+    @Override
+    public void registerService(AgUser agUser, String serviceCode, String roleName, ResponseBean result) throws Exception {
+        AgRole agRole = agRoleService.findByRoleName(roleName);
+        if(agRole == null){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("Role not found !");
+            return;
+        }
+
+//        AgApp agApp = agAppService.findByAppName(appCode);
+//        if(agApp == null){
+//            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+//            result.setMessage("appCode not found !");
+//            return;
+//        }
+
+        AgService agService = agServiceService.findByServiceName(serviceCode);
+        if(agService == null){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("appCode not found !");
+            return;
+        }
+
+        AgRoleApi agRoleApi = new AgRoleApi();
+        agRoleApi.setAgRoleApiId(UUID.randomUUID());
+        //agRoleApi.setAgApp(agApp);
+        agRoleApi.setAgService(agService);
+        agRoleApi.setAgUser(agUser);
+        agRoleApi.setAgRole(agRole);
+        agRoleApi.setStatus(Boolean.TRUE);
+
+        agRoleApiService.save(agRoleApi);
+
+        result.setErrorCode(ErrorCode.ERROR_CODE_OK.getKey());
+        result.setMessage("Register service successfully !");
     }
 }

@@ -28,6 +28,10 @@ public class AgRoleApiServiceImpl implements AgRoleApiService {
             AgRole agRole = agRoleApi.getAgRole();
             AgThrottling agThrottling = agRoleApi.getAgThrottling();
 
+            if(agThrottling == null){
+                return true;
+            }
+
             jedis.select(JedisDB.JEDIS_DB_THROTTLING.getKey());
             if (agRole.getStatus() && (agRole.getAcceptMethod() & agApi.getMethod()) != 0) {
 

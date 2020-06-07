@@ -23,10 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.util.StringUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
 import javax.servlet.http.HttpServletRequest;
@@ -87,6 +84,7 @@ public class AccountController extends CommonController{
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+
     @RequestMapping(value = "/wsSignUp", method = RequestMethod.POST,
             produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity register(@RequestBody UserBean userBean, HttpServletRequest request){
@@ -114,6 +112,7 @@ public class AccountController extends CommonController{
         }
     }
 
+    @RequestMapping(value = "/wsChangePass", method = RequestMethod.POST)
     public ResponseEntity changePass(@RequestBody RequestBean requestBean, HttpServletRequest request){
         try{
             ResponseBean result = new ResponseBean();
@@ -158,7 +157,7 @@ public class AccountController extends CommonController{
                 if (BCrypt.checkpw(oldPass + salt, agUser.getPassword())) {
                     jedis.select(JedisDB.JEDIS_DB_OTP_CHANGE_PASS.getKey());
                     // get otp code in redis cache
-                    String otpJsonCache = jedis.get(username);
+                    String otpJsonCache = jedis.get(agUser.getEmail());
 
                     // if not exist
                     if (otpJsonCache == null) {
@@ -171,6 +170,7 @@ public class AccountController extends CommonController{
                         map.put("times", 1);
                         map.put("time_send", System.currentTimeMillis());
                         map.put("otp", otp);
+                        jedis.select(JedisDB.JEDIS_DB_OTP_CHANGE_PASS.getKey());
                         jedis.set(agUser.getEmail(), Convertor.objectToJson(map));
                         jedis.expire(agUser.getEmail(), ConfigApp.OTP_CACHE_TIME);
 
@@ -202,6 +202,7 @@ public class AccountController extends CommonController{
                                 map.put("times", times);
                                 map.put("time_send", System.currentTimeMillis());
                                 map.put("otp", otp);
+                                jedis.select(JedisDB.JEDIS_DB_OTP_CHANGE_PASS.getKey());
                                 jedis.set(agUser.getEmail(), Convertor.objectToJson(map));
                                 jedis.expire(agUser.getEmail(), ConfigApp.OTP_CACHE_TIME);
                             }
@@ -221,6 +222,10 @@ public class AccountController extends CommonController{
                         agUser.setSalt(salt);
                         agUser.setPassword(hashed);
                         agUserService.update(agUser);
+                        jedis.select(JedisDB.JEDIS_DB_OTP_CHANGE_PASS.getKey());
+                        jedis.del(agUser.getEmail());
+                        jedis.select(JedisDB.JEDIS_DB_SESSION.getKey());
+                        jedis.del(requestBean.getSession());
                         result.setErrorCode(ErrorCode.ERROR_CODE_OK.getKey());
                         result.setMessage("Change pass successfully !");
                         return returnSuccess(requestBean, result);
@@ -258,7 +263,7 @@ public class AccountController extends CommonController{
             responseBean.setMessage("apiName is invalid !");
             return false;
         }
-        if(StringUtils.isEmpty(requestBean.getWsRequest())){
+        if(requestBean.getWsRequest() == null || requestBean.getWsRequest().isEmpty()){
             responseBean.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
             responseBean.setMessage("wsRequest is invalid !");
             return false;
@@ -277,5 +282,86 @@ public class AccountController extends CommonController{
         return true;
     }
 
+    @RequestMapping(value = "/wsRegisterService", method = RequestMethod.POST)
+    public ResponseEntity registerService(@RequestBody RequestBean requestBean, HttpServletRequest request){
+        try{
+            ResponseBean result = new ResponseBean();
+            if(!isValidRequestRegService(requestBean, result)){
+                return returnSuccess(requestBean, result);
+            }
 
+            Jedis jedis = jedisService.getConncetion();
+            jedis.select(JedisDB.JEDIS_DB_SESSION.getKey());
+            Map<String, String> sessionCache = jedis.hgetAll(requestBean.getSession());
+
+            if(sessionCache.isEmpty()){
+                result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+                result.setMessage("session is not exist !");
+                return returnSuccess(requestBean, result);
+            }
+
+            String token = sessionCache.get("token").toString();
+            Claims claims = JwtUtils.decodeJWT(token, requestBean.getToken());
+
+            if(claims == null){
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+            Date expire = claims.getExpiration();
+            Date now = new Date();
+            if(expire.before(now)){
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+
+            String username = claims.getSubject();
+            if(!username.equals(requestBean.getUsername())){
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+
+            String ipAddr = ApiUtils.getClientIpAddress(request);
+            AgUser agUser = agUserService.findByUsername(username);
+
+            String serviceCode = (String) requestBean.getWsRequest().get("serviceCode");
+            String roleName = (String) requestBean.getWsRequest().get("role");
+
+            agUserService.registerService(agUser, serviceCode, roleName, result);
+
+            return returnSuccess(requestBean, result);
+        }catch (Exception e){
+            return returnError(requestBean, e);
+        }
+    }
+
+    private boolean isValidRequestRegService(RequestBean requestBean, ResponseBean result) {
+        if(StringUtils.isEmpty(requestBean.getSession())){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("session is invalid !");
+            return false;
+        }
+        if(StringUtils.isEmpty(requestBean.getToken())){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("token is invalid !");
+            return false;
+        }
+        if(StringUtils.isEmpty(requestBean.getApiName())){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("apiName is invalid !");
+            return false;
+        }
+        if(requestBean.getWsRequest() == null || requestBean.getWsRequest().isEmpty()){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("wsRequest is invalid !");
+            return false;
+        }
+        if(!requestBean.getWsRequest().containsKey("serviceCode")) {
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("serviceCode is invalid !");
+            return false;
+        }
+        if(!requestBean.getWsRequest().containsKey("role")){
+            result.setErrorCode(ErrorCode.ERROR_CODE_DEFAULT.getKey());
+            result.setMessage("role is invalid !");
+            return false;
+        }
+        return true;
+    }
 }

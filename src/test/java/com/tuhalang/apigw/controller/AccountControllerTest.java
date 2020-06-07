@@ -58,6 +58,8 @@ public class AccountControllerTest {
                     ).andReturn();
 
             Map<String, Object> map = Convertor.jsonToMap(result.getResponse().getContentAsString());
+
+            Assert.assertNotNull(map);
             Assert.assertEquals(map.get("errorCode"),"0");
             Assert.assertNotNull(map.get("wsResponse"));
         } catch (Exception e) {
@@ -79,6 +81,8 @@ public class AccountControllerTest {
             ).andReturn();
 
             Map<String, Object> map = Convertor.jsonToMap(result.getResponse().getContentAsString());
+
+            Assert.assertNotNull(map);
             Assert.assertEquals(map.get("errorCode"),"1");
             Assert.assertNull(map.get("wsResponse"));
         } catch (Exception e) {
